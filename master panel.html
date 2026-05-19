@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRIP HUB © OFFICIAL</title>
+    <style>
+        :root { --accent: #00f2ff; --bg: #030303; --card: #0a0a0a; --text: #e0e0e0; --danger: #ff3333; --success: #00ff88; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; overflow-x: hidden; user-select: none; }
+
+        /* LOADER */
+        #main-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; }
+        .spinner { width: 60px; height: 60px; border: 3px solid #111; border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 0.8s infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* LAYOUT */
+        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .header { padding: 30px; text-align: center; border-bottom: 1px solid #1a1a1a; }
+        .logo { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--accent); margin: 0 auto; display: flex; align-items: center; justify-content: center; background: #111; color: var(--accent); font-weight: bold; font-size: 1.5rem; object-fit: cover; overflow: hidden; }
+        .logo img { width: 100%; height: 100%; object-fit: cover; }
+        .brand-name { font-size: 1.6rem; font-weight: 800; letter-spacing: 2px; color: #fff; }
+
+        .navbar { position: fixed; bottom: 0; width: 100%; background: #080808; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--accent); z-index: 100; display: none; }
+        .nav-item { color: #555; font-size: 0.75rem; cursor: pointer; text-align: center; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); }
+
+        .section { display: none; padding: 20px; animation: slideUp 0.4s ease-out; }
+        .section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--card); border: 1px solid #1a1a1a; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .wallet-box { background: linear-gradient(135deg, #0a0a0a, #111); padding: 20px; border-radius: 12px; border-left: 4px solid var(--accent); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        label { font-size: 0.75rem; color: #777; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0 18px 0; background: #000; border: 1px solid #222; color: var(--accent); border-radius: 8px; font-weight: 600; outline: none; box-sizing: border-box; }
+        .btn { background: var(--accent); color: #000; border: none; padding: 16px; width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .btn-danger { background: var(--danger); color: #fff; margin-top: 5px; padding: 10px; }
+        .btn-success { background: var(--success); color: #000; }
+
+        #master-box { display: none; border: 1px dashed #00ff00; padding: 15px; margin-top: 15px; background: rgba(0, 255, 0, 0.05); border-radius: 10px; }
+        .master-badge { font-size: 0.6rem; background: #00ff00; color: #000; padding: 2px 6px; border-radius: 4px; display: none; margin-left: 5px; vertical-align: middle; }
+
+        .proc-box { display: none; text-align: center; padding: 30px 10px; }
+        
+        .qr-area { background: #fff; padding: 10px; border-radius: 10px; margin: 15px auto; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--accent); }
+        .qr-area img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+        .output-label { font-size: 0.65rem; color: #888; text-transform: uppercase; margin-bottom: 5px; display: block; text-align: left; }
+        .key-box { font-size: 1.2rem; color: #00ff00; letter-spacing: 2px; background: #000; padding: 12px; border: 1px dashed #333; text-align: center; font-weight: bold; margin-bottom: 10px; border-radius: 5px; }
+
+        /* ADMIN TABLE */
+        .user-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
+        .user-table th { text-align: left; color: #777; padding: 8px; border-bottom: 1px solid #333; }
+        .user-table td { padding: 8px; border-bottom: 1px solid #1a1a1a; color: #fff; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div id="main-loader">
+    <div class="spinner"></div>
+    <h3 style="letter-spacing: 4px; color: var(--accent); margin-top: 20px;">INITIALIZING...</h3>
+</div>
+
+<div id="auth-screen">
+    <div class="card" id="login-form" style="width: 320px;">
+        <h2 style="text-align:center; color:var(--accent);">LOGIN</h2>
+        <input type="text" id="user-id" placeholder="Username">
+        <input type="password" id="user-pass" placeholder="Password">
+        <button class="btn" onclick="handleAuth('login')">ENTER HUB</button>
+        <p style="font-size: 0.75rem; text-align:center; margin-top:15px; color:#555;" onclick="toggleAuth()">New User? <span style="color:var(--accent);">Sign Up</span></p>
+    </div>
+
+    <div class="card" id="signup-form" style="width: 320px; display:none;">
+        <h2 style="text-align:center; color:#fff;">REGISTER</h2>
+        <input type="text" id="new-id" placeholder="Create Username">
+        <input type="password" id="new-pass" placeholder="Create Password">
+        <button class="btn" style="background:#fff; color:#000;" onclick="handleAuth('signup')">SIGN UP</button>
+        <p style="font-size: 0.75rem; text-align:center; margin-top:15px; color:#555;" onclick="toggleAuth()">Existing User? <span style="color:var(--accent);">Login</span></p>
+    </div>
+</div>
+
+<div id="main-content" style="display:none;">
+    <div class="header">
+        <!-- LOGO: Agar image nahi hai toh 'DH' text dikhega -->
+        <div class="logo">
+            <img src="ChatGPT Image May 15, 2026, 06_16_54 PM.png" onerror="this.style.display='none'; this.parentElement.innerText='DH';">
+        </div>
+        <div class="brand-name">DRIP HUB <span id="master-tag" class="master-badge">ADMIN</span></div>
+        <p id="welcome-user" style="font-size: 0.7rem; color: #555; margin-top:5px;"></p>
+    </div>
+
+    <div id="home" class="section active">
+        <div class="wallet-box">
+            <div>
+                <div style="font-size: 0.7rem; color: #555;">AVAILABLE CREDITS</div>
+                <div id="credit-display" style="color: var(--accent); font-size: 1.8rem; font-weight: 800;">0</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="color: #00ff00; font-size: 0.6rem;">● SYSTEM ONLINE</div>
+            </div>
+        </div>
+        
+        <div class="card" id="gen-card-content">
+            <h3 style="margin-top:0; font-size: 0.9rem; border-bottom: 1px solid #1a1a1a; padding-bottom:10px;">KEY GENERATOR</h3>
+            
+            <label>Select Mod Menu</label>
+            <select id="mod-select" onchange="updateModPlans()">
+                <option value="hg">HG CHEATS</option>
+                <option value="pato">PATO TEAM</option>
+                <option value="prime">PRIME HOOK</option>
+                <option value="drip">DRIP CLIENT</option>
+            </select>
+
+            <label>Select Duration</label>
+            <select id="plan-select"></select>
+
+            <button class="btn" onclick="startKeyGen()">GENERATE KEY</button>
+        </div>
+
+        <div id="gen-loader" class="proc-box card">
+            <div class="spinner" style="width:30px; height:30px; margin: 0 auto 15px;"></div>
+            <p id="gen-msg" style="color:var(--accent); font-family: monospace; font-size:0.8rem;">Processing Request...</p>
+        </div>
+
+        <div id="result-box" class="card" style="display:none; border-top: 2px solid #00ff00;">
+            <p style="font-size:0.7rem; color:#555; text-align:center; margin-bottom:15px;">CREDENTIALS GENERATED</p>
+            
+            <div id="user-result-div" style="display:none;">
+                <span class="output-label">USERNAME:</span>
+                <div id="user-output" class="key-box"></div>
+            </div>
+
+            <span class="output-label" id="pass-label">KEY / PASSWORD:</span>
+            <div id="key-output" class="key-box"></div>
+
+            <button class="btn" style="background:#111; color:#fff; border:1px solid #333;" onclick="copyKey()">COPY KEY</button>
+        </div>
+    </div>
+
+    <div id="buy" class="section">
+        <div class="card" id="buy-card-content">
+            <h3 style="margin-top:0; color: #00ff00;">CREDIT STORE</h3>
+            <label>Choose Pack</label>
+            <select id="credit-pack" onchange="updateQR()">
+                <option value="199" data-credits="10">10 CREDITS - ₹199</option>
+                <option value="399" data-credits="30">30 CREDITS - ₹399</option>
+                <option value="529" data-credits="50">50 CREDITS - ₹529</option>
+            </select>
+            
+            <div class="qr-area">
+                <!-- QR Image load hoga JS se -->
+                <img id="qr-img" src="qr codes.jpeg" alt="QR Code" onerror="this.src='qr codes.jpeg'">
+            </div>
+            
+            <input type="number" id="utr-input" placeholder="Enter 12-Digit UTR">
+            <button class="btn btn-success" onclick="startUTRVerify()">SUBMIT PAYMENT</button>
+            <p style="font-size:0.6rem; color:#555; text-align:center;">Requests will be verified by Admin.</p>
+
+            <div id="master-box">
+                <label style="color:#00ff00; margin-top:10px; display:block;">Admin: Set Custom Output</label>
+                <input type="text" id="custom-key-input" placeholder="Custom Key" oninput="persistMaster()">
+                <input type="text" id="custom-user-input" placeholder="Custom Username" oninput="persistMaster()">
+            </div>
+        </div>
+
+        <div id="utr-loader" class="proc-box card">
+            <div class="spinner" style="width:30px; height:30px; margin: 0 auto 15px;"></div>
+            <p id="utr-msg" style="color:#00ff00;">Connecting to Payment Gateway...</p>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin" class="section">
+        <div class="card">
+            <h3 style="color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px;">ADMIN DASHBOARD</h3>
+            
+            <label style="margin-top:10px;">📩 PENDING PAYMENTS</label>
+            <div id="admin-requests-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+
+            <label>👥 USER DATABASE (Full Info)</label>
+            <div style="overflow-x: auto;">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Credits</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">
+                <label>MANUAL CREDIT ADD</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="admin-add-user" placeholder="Username" style="margin:0;">
+                    <input type="number" id="admin-add-amt" placeholder="Amt" style="margin:0;">
+                </div>
+                <button class="btn btn-success" style="padding:10px; margin-top:10px;" onclick="manualAddCredit()">ADD CREDITS</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="navbar" id="main-nav">
+    <div class="nav-item active" onclick="showTab('home', this)">HOME</div>
+    <div class="nav-item" onclick="showTab('buy', this)">STORE</div>
+    <div class="nav-item" id="nav-admin" style="display:none; color: var(--danger);" onclick="showTab('admin', this)">ADMIN</div>
+    <div class="nav-item" onclick="location.reload()" style="color:#ff4444;">EXIT</div>
+</div>
+
+<script>
+    // ===========================================================
+    // ADMIN CREDENTIALS (YAHAN SE CHANGE KAREIN)
+    // ===========================================================
+    const ADMIN_CONFIG = {
+        user: "admin",   // Admin Username
+        pass: "admin123" // Admin Password
+    };
+    // ===========================================================
+
+    let currentUser = null;
+    let isAdmin = false;
+
+    const modData = {
+        hg: [ {d:5, c:3}, {d:15, c:5}, {d:30, c:6} ],
+        pato: [ {d:5, c:2}, {d:7, c:3}, {d:30, c:5} ],
+        prime: [ {d:5, c:2}, {d:10, c:4} ],
+        drip: [ {d:1, c:1}, {d:3, c:2}, {d:7, c:3}, {d:15, c:4}, {d:30, c:5} ]
+    };
+
+    // DATABASE FUNCTIONS
+    function getUsers() { return JSON.parse(localStorage.getItem('drip_db')) || {}; }
+    function getRequests() { return JSON.parse(localStorage.getItem('drip_reqs')) || []; }
+    function saveData(data) { localStorage.setItem('drip_db', JSON.stringify(data)); }
+    function saveReqs(data) { localStorage.setItem('drip_reqs', JSON.stringify(data)); }
+
+    window.onload = function() {
+        updateModPlans();
+        updateQR(); // Initialize QR on load
+        loadMasterState(); 
+        setTimeout(() => { document.getElementById('main-loader').style.display = 'none'; }, 1500);
+    };
+
+    // UPDATED QR FUNCTION TO HANDLE MULTIPLE QRs
+    function updateQR() { 
+        let val = document.getElementById('credit-pack').value;
+        let qrImg = document.getElementById('qr-img');
+        
+        // Set image source based on selected value (199.png, 399.png, etc.)
+        // Adding timestamp to prevent caching issues
+        qrImg.src = val + ".png?t=" + new Date().getTime();
+    }
+
+    function persistMaster() {
+        let masterData = {
+            key: document.getElementById('custom-key-input').value,
+            user: document.getElementById('custom-user-input').value
+        };
+        localStorage.setItem('master_config', JSON.stringify(masterData));
+    }
+
+    function loadMasterState() {
+        if(isAdmin) {
+            document.getElementById('master-tag').style.display = 'inline-block';
+            document.getElementById('master-box').style.display = 'block';
+            let config = JSON.parse(localStorage.getItem('master_config') || '{}');
+            if(config) {
+                document.getElementById('custom-key-input').value = config.key || "";
+                document.getElementById('custom-user-input').value = config.user || "";
+            }
+        }
+    }
+
+    function updateModPlans() {
+        const mod = document.getElementById('mod-select').value;
+        const planSelect = document.getElementById('plan-select');
+        planSelect.innerHTML = '';
+        modData[mod].forEach(plan => {
+            let opt = document.createElement('option');
+            opt.value = plan.c;
+            opt.innerText = `${plan.d} DAYS (${plan.c} Credits)`;
+            planSelect.appendChild(opt);
+        });
+    }
+
+    // AUTHENTICATION
+    function handleAuth(type) {
+        let id = document.getElementById('user-id').value.trim();
+        let pass = document.getElementById('user-pass').value.trim();
+
+        // ADMIN LOGIN
+        if (type === 'login' && id === ADMIN_CONFIG.user && pass === ADMIN_CONFIG.pass) {
+            isAdmin = true;
+            currentUser = "ADMIN";
+            loginSuccess();
+            return;
+        }
+
+        // USER LOGIN/SIGNUP
+        let db = getUsers();
+        if(type === 'signup') {
+            let newId = document.getElementById('new-id').value.trim();
+            let newPass = document.getElementById('new-pass').value.trim();
+            if(!newId || !newPass) return alert("Please fill all fields!");
+            if(newId === ADMIN_CONFIG.user) return alert("Username is reserved for Admin!");
+            if(db[newId]) return alert("User already exists!");
+            db[newId] = { password: newPass, credits: 0 };
+            saveData(db); 
+            alert("Account Created! Please Login."); 
+            toggleAuth();
+        } else {
+            if(db[id] && db[id].password === pass) {
+                isAdmin = false;
+                currentUser = id;
+                loginSuccess();
+            } else { 
+                alert("Invalid Username or Password!"); 
+            }
+        }
+    }
+
+    function loginSuccess() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('main-nav').style.display = 'flex';
+        document.getElementById('welcome-user').innerText = "ID: " + currentUser;
+        
+        if(isAdmin) {
+            document.getElementById('nav-admin').style.display = 'block';
+            renderAdminPanel();
+        } else {
+            document.getElementById('nav-admin').style.display = 'none';
+        }
+        updateWallet();
+        loadMasterState();
+    }
+
+    // ADMIN PANEL LOGIC
+    function renderAdminPanel() {
+        if(!isAdmin) return;
+        
+        // 1. PENDING REQUESTS
+        let reqs = getRequests();
+        let reqDiv = document.getElementById('admin-requests-list');
+        reqDiv.innerHTML = '';
+        if(reqs.length === 0) reqDiv.innerHTML = '<p style="color:#555; text-align:center;">No pending requests.</p>';
+
+        reqs.forEach((r, index) => {
+            let item = document.createElement('div');
+            item.style.cssText = "background:#111; padding:10px; margin-bottom:5px; border:1px solid #333; border-radius:5px;";
+            item.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:bold; color:#fff;">
+                    <span>User: ${r.user}</span>
+                    <span style="color:var(--success)">${r.credits} CR</span>
+                </div>
+                <div style="font-size:0.7rem; color:#aaa; margin:5px 0;">UTR: ${r.utr}</div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-success" style="padding:5px; margin:0;" onclick="approveReq(${index})">✔ Approve</button>
+                    <button class="btn btn-danger" style="padding:5px; margin:0;" onclick="rejectReq(${index})">✖ Reject</button>
+                </div>
+            `;
+            reqDiv.appendChild(item);
+        });
+
+        // 2. USER DATABASE TABLE
+        let db = getUsers();
+        let tbody = document.getElementById('user-table-body');
+        tbody.innerHTML = '';
+        Object.keys(db).forEach(u => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${u}</td>
+                <td style="color:#aaa; font-family:monospace;">${db[u].password}</td>
+                <td style="color:var(--accent); font-weight:bold;">${db[u].credits}</td>
+                <td>
+                    <button class="btn btn-danger" style="padding:4px; font-size:0.6rem;" onclick="deleteUser('${u}')">DELETE</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function approveReq(index) {
+        let reqs = getRequests();
+        let r = reqs[index];
+        let db = getUsers();
+        if(db[r.user]) {
+            db[r.user].credits += parseInt(r.credits);
+            saveData(db);
+        }
+        reqs.splice(index, 1);
+        saveReqs(reqs);
+        renderAdminPanel();
+        alert(`Success! Added ${r.credits} credits to ${r.user}`);
+    }
+
+    function rejectReq(index) {
+        let reqs = getRequests();
+        reqs.splice(index, 1);
+        saveReqs(reqs);
+        renderAdminPanel();
+        alert("Request Rejected.");
+    }
+
+    function deleteUser(username) {
+        if(!confirm("Are you sure you want to DELETE this user permanently?")) return;
+        let db = getUsers();
+        delete db[username];
+        saveData(db);
+        renderAdminPanel();
+        alert("User Deleted.");
+    }
+
+    function manualAddCredit() {
+        let u = document.getElementById('admin-add-user').value.trim();
+        let amt = parseInt(document.getElementById('admin-add-amt').value);
+        if(!u || !amt) return alert("Enter Username and Amount");
+        
+        let db = getUsers();
+        if(db[u]) {
+            db[u].credits += amt;
+            saveData(db);
+            renderAdminPanel();
+            alert(`Added ${amt} credits to ${u}`);
+            document.getElementById('admin-add-user').value = '';
+            document.getElementById('admin-add-amt').value = '';
+        } else {
+            alert("User not found!");
+        }
+    }
+
+    // GENERATOR LOGIC
+    function startKeyGen() {
+        let db = getUsers();
+        let cost = parseInt(document.getElementById('plan-select').value);
+        
+        if(!isAdmin) {
+            if(db[currentUser].credits < cost) return alert("Insufficient Credits!");
+            db[currentUser].credits -= cost;
+            saveData(db);
+        }
+        
+        updateWallet();
+        
+        document.getElementById('gen-card-content').style.display = 'none';
+        document.getElementById('gen-loader').style.display = 'block';
+
+        setTimeout(() => {
+            let finalKey, finalUser;
+            let config = JSON.parse(localStorage.getItem('master_config') || '{}');
+            let mod = document.getElementById('mod-select').value;
+
+            if(config.key) {
+                finalKey = config.key;
+            } else {
+                finalKey = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+            }
+
+            if(mod === 'prime') {
+                document.getElementById('user-result-div').style.display = 'block';
+                document.getElementById('pass-label').innerText = "PASSWORD:";
+                finalUser = config.user ? config.user : "PRIME_" + Math.floor(1000 + Math.random() * 9000);
+                document.getElementById('user-output').innerText = finalUser;
+            } else {
+                document.getElementById('user-result-div').style.display = 'none';
+                document.getElementById('pass-label').innerText = "KEY:";
+            }
+
+            document.getElementById('key-output').innerText = finalKey;
+            document.getElementById('gen-loader').style.display = 'none';
+            document.getElementById('result-box').style.display = 'block';
+        }, 2500);
+    }
+
+    // PAYMENT LOGIC
+    function startUTRVerify() {
+        let utr = document.getElementById('utr-input').value;
+        let pack = document.getElementById('credit-pack');
+        let credits = parseInt(pack.options[pack.selectedIndex].getAttribute('data-credits'));
+
+        if(utr.length < 4) return alert("Invalid UTR!");
+        let reqs = getRequests();
+        if(reqs.find(r => r.utr === utr)) return alert("This UTR is already submitted.");
+
+        reqs.push({ user: currentUser, utr: utr, credits: credits });
+        saveReqs(reqs);
+
+        document.getElementById('buy-card-content').style.display = 'none';
+        document.getElementById('utr-loader').style.display = 'block';
+
+        setTimeout(() => {
+            document.getElementById('buy-card-content').style.display = 'block';
+            document.getElementById('utr-loader').style.display = 'none';
+            document.getElementById('utr-input').value = '';
+            alert("Payment Request Submitted! Wait for Admin Approval.");
+        }, 1500);
+    }
+
+    // UTILS
+    function updateWallet() { 
+        if(isAdmin) {
+            document.getElementById('credit-display').innerText = "∞"; // Admin Infinite Credits
+        } else {
+            let db = getUsers();
+            document.getElementById('credit-display').innerText = db[currentUser].credits; 
+        }
+    }
+
+    function toggleAuth() {
+        document.getElementById('login-form').style.display = document.getElementById('login-form').style.display === 'none' ? 'block' : 'none';
+        document.getElementById('signup-form').style.display = document.getElementById('signup-form').style.display === 'none' ? 'block' : 'none';
+    }
+
+    function showTab(t, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(t).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        if(t === 'home') {
+            document.getElementById('result-box').style.display = 'none';
+            document.getElementById('gen-card-content').style.display = 'block';
+        }
+        if(t === 'admin' && isAdmin) renderAdminPanel();
+    }
+
+    function copyKey() {
+        let text = "";
+        if(document.getElementById('user-result-div').style.display === 'block') {
+            text = "User: " + document.getElementById('user-output').innerText + "\nPass: " + document.getElementById('key-output').innerText;
+        } else {
+            text = "Key: " + document.getElementById('key-output').innerText;
+        }
+        navigator.clipboard.writeText(text); alert("Credentials Copied!"); 
+    }
+
+    // SECURITY SHORTCUTS DISABLE
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.onkeydown = function(e) {
+        if(e.keyCode == 123) return false;
+        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+    }
+</script>
+</body>
+</html>
